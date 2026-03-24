@@ -1,0 +1,186 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:opacity .15s}
+.badge-feito{background:#EAF3DE;color:#27500A;border-color:#97C459}
+.badge-andamento{background:#FAEEDA;color:#633806;border-color:#EF9F27}
+.badge-pendente{background:#F1EFE8;color:#444441;border-color:#B4B2A9}
+.badge-bonus{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
+.fase-label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.08em;text-transform:uppercase;margin:1.5rem 0 .5rem}
+.task{display:flex;align-items:center;gap:10px;padding:10px 14px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);margin-bottom:6px;background:var(--color-background-primary);cursor:pointer;transition:border-color .15s}
+.task:hover{border-color:var(--color-border-secondary)}
+.task-label{flex:1;font-size:13px;color:var(--color-text-primary)}
+.task-note{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.progress-bar{height:6px;background:var(--color-border-tertiary);border-radius:3px;margin:.5rem 0 .25rem;overflow:hidden}
+.progress-fill{height:100%;background:#639922;border-radius:3px;transition:width .4s ease}
+.progress-text{font-size:12px;color:var(--color-text-secondary)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem}
+.reset-btn{font-size:12px;color:var(--color-text-secondary);background:none;border:0.5px solid var(--color-border-secondary);border-radius:6px;padding:4px 10px;cursor:pointer;margin-bottom:1rem}
+.reset-btn:hover{background:var(--color-background-secondary)}
+</style>
+
+<h2 style="font-size:18px;font-weight:500;color:var(--color-text-primary);margin-bottom:1rem">Orbis — Roadmap Front-end</h2>
+
+<div class="legend">
+  <span class="badge badge-feito">feito</span><span style="font-size:12px;color:var(--color-text-secondary)">Concluído</span>
+  <span class="badge badge-andamento">em andamento</span><span style="font-size:12px;color:var(--color-text-secondary)">Em progresso</span>
+  <span class="badge badge-pendente">pendente</span><span style="font-size:12px;color:var(--color-text-secondary)">Pendente</span>
+  <span class="badge badge-bonus">bônus</span><span style="font-size:12px;color:var(--color-text-secondary)">Bônus</span>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="pbar"></div></div>
+<div class="progress-text" id="ptxt"></div>
+
+<br>
+<button class="reset-btn" onclick="resetAll()">↺ Resetar tudo</button>
+
+<div id="root"></div>
+
+<script>
+const PHASES = [
+  {
+    label: "Fase 1 — Fundação",
+    tasks: [
+      {id:"f1",label:"Setup do Next.js",note:"create-next-app, estrutura de pastas, sem src/",status:"feito"},
+      {id:"f2",label:"Route groups — (public) e dashboard",note:"layout raiz limpo, Header/Footer só no (public)",status:"feito"},
+      {id:"f3",label:"Fontes — Poppins + Open Sans",note:"next/font/google com variáveis CSS",status:"feito"},
+      {id:"f4",label:"globals.css + Tailwind v4",note:"@plugin tw-animate-css, variáveis de cor e tema",status:"feito"},
+      {id:"f5",label:"Shadcn setup",note:"npx shadcn@latest init, estilo Default",status:"feito"},
+      {id:"f6",label:"Variável de ambiente",note:"NEXT_PUBLIC_API_URL apontando para a API",status:"pendente"},
+    ]
+  },
+  {
+    label: "Fase 2 — Autenticação",
+    tasks: [
+      {id:"a1",label:"Página de Login",note:"formulário email + senha, validação básica",status:"em andamento"},
+      {id:"a2",label:"Página de Cadastro",note:"verificação de senha do admin + dados do novo usuário",status:"pendente"},
+      {id:"a3",label:"Armazenar JWT e refresh token",note:"salvo em memória / cookie httpOnly",status:"pendente"},
+      {id:"a4",label:"Refresh automático do token",note:"interceptar 401 e chamar POST /auth/refresh",status:"pendente"},
+      {id:"a5",label:"Proteção de rotas autenticadas",note:"middleware Next.js redirecionando não autenticados",status:"pendente"},
+      {id:"a6",label:"Logout",note:"limpar tokens e redirecionar para /login",status:"pendente"},
+    ]
+  },
+  {
+    label: "Fase 3 — Dashboard",
+    tasks: [
+      {id:"d1",label:"Layout do dashboard (sidebar + header)",note:"AppSidebar, SiteHeader, SidebarInset",status:"feito"},
+      {id:"d2",label:"SectionCards — 4 cards principais",note:"máquinas, alertas, sensores, integridade",status:"feito"},
+      {id:"d3",label:"Gráfico de área — tendência de alertas",note:"ChartAreaInteractive com filtro 7d/30d/90d",status:"feito"},
+      {id:"d4",label:"Gráfico de rosca — tipos de alerta",note:"ChartPieDonut com categorias do Orbit",status:"feito"},
+      {id:"d5",label:"Tabela de máquinas",note:"DataTable com colunas Orbis, drawer lateral",status:"feito"},
+      {id:"d6",label:"Integração real — GET /dashboard/resumo",note:"substituir mock do SectionCards pela API",status:"pendente"},
+      {id:"d7",label:"Integração real — GET /maquinas",note:"substituir data.json pela API paginada",status:"pendente"},
+      {id:"d8",label:"WebSocket — alertas em tempo real",note:"socket.io-client, evento 'alerta' atualiza UI",status:"pendente"},
+    ]
+  },
+  {
+    label: "Fase 4 — Cadastros (CRUD)",
+    tasks: [
+      {id:"c1",label:"Página de Máquinas",note:"listagem, criar, editar, excluir",status:"pendente"},
+      {id:"c2",label:"Página de Sensores",note:"vinculação à máquina, limites de alerta",status:"pendente"},
+      {id:"c3",label:"Página de Usuários",note:"somente Admin — CRUD com verificação de senha",status:"pendente"},
+      {id:"c4",label:"Formulários de criação/edição",note:"validação com react-hook-form ou nativa",status:"pendente"},
+    ]
+  },
+  {
+    label: "Fase 5 — Alertas",
+    tasks: [
+      {id:"al1",label:"Página de Alertas",note:"listagem ordenada por criticidade ALTA → BAIXA",status:"pendente"},
+      {id:"al2",label:"Timeline de eventos do alerta",note:"CRIADO → ACEITO → ATUALIZADO → RESOLVIDO",status:"pendente"},
+      {id:"al3",label:"Ação de cancelar alerta (Admin)",note:"PATCH /alertas/:id/status com status CANCELADO",status:"pendente"},
+    ]
+  },
+  {
+    label: "Fase 6 — Perfil",
+    tasks: [
+      {id:"p1",label:"Página de perfil",note:"nome, e-mail, telefone, especialidade",status:"pendente"},
+      {id:"p2",label:"Edição de dados do perfil",note:"PUT /perfil",status:"pendente"},
+    ]
+  },
+  {
+    label: "Bônus",
+    tasks: [
+      {id:"b1",label:"Página 404 personalizada",note:"not-found.jsx com identidade visual do Orbit",status:"feito",bonus:true},
+      {id:"b2",label:"Loading states e skeletons",note:"Skeleton do Shadcn enquanto carrega dados da API",status:"pendente",bonus:true},
+      {id:"b3",label:"Responsividade mobile",note:"sidebar colapsável, tabela com scroll horizontal",status:"pendente",bonus:true},
+      {id:"b4",label:"Toast de feedback",note:"sonner para sucesso/erro nas ações de CRUD",status:"pendente",bonus:true},
+    ]
+  }
+]
+
+const STATUS_CYCLE = ["pendente","em andamento","feito"]
+
+let state = {}
+PHASES.forEach(ph => ph.tasks.forEach(t => { state[t.id] = t.status }))
+
+function statusClass(s){ return s==="feito"?"badge-feito":s==="em andamento"?"badge-andamento":s==="bonus"?"badge-bonus":"badge-pendente" }
+function statusLabel(s){ return s }
+
+function countDone(){
+  let done=0,total=0
+  PHASES.forEach(ph=>ph.tasks.forEach(t=>{ total++; if(state[t.id]==="feito") done++ }))
+  return {done,total}
+}
+
+function cycleStatus(id,bonus){
+  const cur = state[id]
+  if(bonus){
+    const bonusCycle=["pendente","em andamento","feito"]
+    const idx=bonusCycle.indexOf(cur)
+    state[id]=bonusCycle[(idx+1)%bonusCycle.length]
+  } else {
+    const idx=STATUS_CYCLE.indexOf(cur)
+    state[id]=STATUS_CYCLE[(idx+1)%STATUS_CYCLE.length]
+  }
+  render()
+  saveState()
+}
+
+async function saveState(){
+  try{ await window.storage.set('orbis-frontend-roadmap', JSON.stringify(state)) }catch(e){}
+}
+
+async function loadState(){
+  try{
+    const r = await window.storage.get('orbis-frontend-roadmap')
+    if(r) state = JSON.parse(r.value)
+  }catch(e){}
+  render()
+}
+
+function resetAll(){
+  PHASES.forEach(ph=>ph.tasks.forEach(t=>{ state[t.id]=t.status }))
+  render()
+  saveState()
+}
+
+function render(){
+  const {done,total} = countDone()
+  const pct = Math.round(done/total*100)
+  document.getElementById('pbar').style.width = pct+'%'
+  document.getElementById('ptxt').textContent = `Progresso: ${done} de ${total} tarefas concluídas (${pct}%)`
+
+  let html = ''
+  PHASES.forEach(ph => {
+    html += `<div class="fase-label">${ph.label}</div>`
+    ph.tasks.forEach(t => {
+      const s = state[t.id]
+      const badgeCls = t.bonus && s!=="feito" && s!=="em andamento" ? "badge-bonus" : statusClass(s)
+      const badgeTxt = t.bonus && s==="pendente" ? "bônus" : statusLabel(s)
+      html += `
+        <div class="task" onclick="cycleStatus('${t.id}',${!!t.bonus})">
+          <span class="badge ${badgeCls}">${badgeTxt}</span>
+          <div style="flex:1">
+            <div class="task-label">${t.label}</div>
+            <div class="task-note">${t.note}</div>
+          </div>
+          <span style="font-size:11px;color:var(--color-text-tertiary)">clique para avançar</span>
+        </div>`
+    })
+  })
+  document.getElementById('root').innerHTML = html
+}
+
+loadState()
+</script>
